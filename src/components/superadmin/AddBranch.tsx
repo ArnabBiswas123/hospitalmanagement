@@ -100,7 +100,7 @@ export default function AddBranch(props: Proptype) {
     }
 
     return (
-        <Dialog.Root open={props.isOpen}>
+        <Dialog.Root open={props.isOpen} trapFocus={false}>
             <Portal>
                 <Dialog.Backdrop />
                 <Dialog.Positioner>

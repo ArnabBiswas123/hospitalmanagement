@@ -27,22 +27,22 @@ import {
     Tag
 } from "@chakra-ui/react";
 import { toaster } from "../ui/toaster";
-import ViewBranch from "./ViewBranch";
-import AddBranch from "./AddBranch";
-import EditBranch from "./EditBranch";
+import ViewManager from "./ViewManager";
+
 
 
 type createdorUpdatedBy = {
     name: string;
     userid: string;
 }
-export type branch = {
+
+export type manager = {
     userid: string;
     name: string;
     email: string;
-    address: string;
     phone: string;
     createdAt: string;
+    associatedHospitalBranch: createdorUpdatedBy
     isActive: boolean;
     isdefault: boolean;
     createdBy?: createdorUpdatedBy;
@@ -51,19 +51,15 @@ export type branch = {
 }
 export default function BranchTable() {
     const navigate = useNavigate();
-    const [branches, setBranches] = useState<branch[]>([]);
+    const [managers, setManagers] = useState<manager[]>([]);
     const [searchInput, setSearchInput] = useState('')
     const [isViewOpen, setIsViewopen] = useState(false);
-    const [editOpen, setEditOpen] = useState(false);
-    const [editBranchId, setEditBranchId] = useState('')
-    const [viewDetails, setViewDeatils] = useState<branch | null>(null)
-    const [addOpen, setAddOpen] = useState(false)
-    const [fetchAgain, setFetchAgain] = useState(false)
+    const [viewDetails, setViewDeatils] = useState<manager | null>(null)
     const [loading, setLoading] = useState(true)
     const [rowSelection, setRowSelection] = useState({});
     const [showCheckboxes, setShowCheckboxes] = useState(false);
 
-    const fetchBranch = async () => {
+    const fetchManager = async () => {
         try {
             const token = localStorage.getItem("token");
             if (!token) {
@@ -72,7 +68,7 @@ export default function BranchTable() {
             }
             setLoading(true);
             const response: Response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/getallbranch`,
+                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/getallhospitalmanagers`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -80,9 +76,9 @@ export default function BranchTable() {
                 }
             );
             setLoading(false);
-            const data: { success: boolean; data?: branch[]; msg?: string } = await response.json();
+            const data: { success: boolean; data?: manager[]; msg?: string } = await response.json();
             if (data.success) {
-                setBranches(data.data || []);
+                setManagers(data.data || []);
             } else {
                 localStorage.removeItem("token");
                 navigate("/");
@@ -110,11 +106,11 @@ export default function BranchTable() {
         );
         if (!confirmEnable) return;
         const selectedRows = table.getSelectedRowModel().rows;
-        const selectedBranchIds = selectedRows
+        const selectedManagerIds = selectedRows
             .filter(row => !row.original.isActive)
             .map(row => row.original.userid);
 
-        if (selectedBranchIds.length === 0) {
+        if (selectedManagerIds.length === 0) {
             toaster.create({
                 title: "No inactive branches selected.",
                 type: "info",
@@ -125,28 +121,33 @@ export default function BranchTable() {
 
         try {
             const response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/enablebranch`,
+                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/enablemanagers`,
                 {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
                         Authorization: `Bearer ${token}`,
                     },
-                    body: JSON.stringify({ branchIds: selectedBranchIds }),
+                    body: JSON.stringify({ managerIds: selectedManagerIds }),
                 }
             );
 
             const data = await response.json();
             if (data.success) {
-                setBranches(prevData =>
+                setManagers(prevData =>
                     prevData.map(item =>
-                        selectedBranchIds.includes(item.userid)
+                        data.enabledUserIds.includes(item.userid)
                             ? { ...item, isActive: true }
                             : item
                     )
                 );
+
+                let title = `${data.enabledCount} manager${data.enabledCount! > 1 ? "s" : ""} enabled successfully`;
+                if (data.skippedCount! > 0) {
+                    title += `; ${data.skippedCount} manager${data.skippedCount! > 1 ? "s" : ""} skipped (branch disabled)`;
+                }
                 toaster.create({
-                    title: "Branches enabled successfully!",
+                    title: title,
                     type: "success",
                     duration: 2500,
                 });
@@ -178,7 +179,7 @@ export default function BranchTable() {
         }
         try {
             const response: Response = await fetch(
-                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/disablebranch/${rowId}`,
+                `${import.meta.env.VITE_BACKEND_URL}api/v1/hospitalsuperadmin/disablemanager/${rowId}`,
                 {
                     method: "PUT",
                     headers: {
@@ -189,12 +190,12 @@ export default function BranchTable() {
             );
             const data: { success: boolean; msg?: string } = await response.json();
             if (data.success === true) {
-                setBranches((prevData) =>
+                setManagers((prevData) =>
                     prevData.map((item) =>
                         item.userid === rowId ? { ...item, isActive: false } : item
                     ))
                 toaster.create({
-                    title: "Branch disabled successfully!",
+                    title: "Manager disabled successfully!",
                     type: "success",
                     duration: 2500,
                 });
@@ -204,11 +205,19 @@ export default function BranchTable() {
             console.log(error);
         }
     }
-    const data = useMemo(() => branches, [branches]);
-    const columns = useMemo<ColumnDef<branch>[]>(
+    const data = useMemo(() => managers, [managers]);
+    const columns = useMemo<ColumnDef<manager>[]>(
         () => {
-            const baseColumns: ColumnDef<branch>[] = [
-                { header: 'Branch Id', accessorKey: 'userid' },
+            const baseColumns: ColumnDef<manager>[] = [
+                { header: 'Manager Id', accessorKey: 'userid' },
+                {
+                    header: 'Branch Id', accessorKey: 'branchid',
+                    cell: ({ row }) => {
+                        return <Text title={row.original.associatedHospitalBranch.name}>
+                            {row.original.associatedHospitalBranch.userid}
+                        </Text>
+                    }
+                },
                 {
                     header: 'Name',
                     accessorKey: 'name',
@@ -235,7 +244,7 @@ export default function BranchTable() {
                 },
                 {
                     header: 'Edit',
-                    cell: ({ row }) => {
+                    cell: ({row}) => {
                         return <IconButton
                             aria-label="Edit"
                             bgColor={"white"}
@@ -244,8 +253,7 @@ export default function BranchTable() {
                                 bgColor: "white",
                             }}
                             onClick={() => {
-                                setEditOpen(true)
-                                setEditBranchId(row.original.userid)
+                                navigate(`/superadmin/editmanager/${row.original.userid}`)
                             }}
                         >
                             <FaEdit />
@@ -272,7 +280,7 @@ export default function BranchTable() {
             ];
 
             if (showCheckboxes) {
-                const checkboxColumn: ColumnDef<branch> = {
+                const checkboxColumn: ColumnDef<manager> = {
                     id: 'select',
                     header: ({ table }) => {
                         const selectableRows = table.getFilteredRowModel().rows.filter(row => !row.original.isActive);
@@ -349,8 +357,8 @@ export default function BranchTable() {
     });
 
     useEffect(() => {
-        fetchBranch()
-    }, [fetchAgain])
+        fetchManager()
+    }, [])
 
     const selectedCount = table.getSelectedRowModel().rows.length;
 
@@ -390,12 +398,11 @@ export default function BranchTable() {
                         borderRadius={'md'}
                         fontFamily="Inter, sans-serif"
                         onClick={() => {
-                            setAddOpen(true)
+                            navigate('/superadmin/addmanager')
                         }}
                     >
-                        Add Branch
+                        Add Manager
                     </Button>
-
                 </Box>
                 <Box display={"flex"} flexDirection={"row-reverse"}>
                     <InputGroup width={["100%", "80%", "50%", "30%"]} mb={1} startElement={<LuSearch />}>
@@ -497,9 +504,7 @@ export default function BranchTable() {
                     </Box>
                 </Box>
             </>}
-            {isViewOpen ? <ViewBranch isOpen={isViewOpen} onClose={() => { setIsViewopen(false) }} data={viewDetails}></ViewBranch> : ''}
-            {addOpen ? <AddBranch isOpen={addOpen} onClose={() => { setAddOpen(false) }} setFetchAgain={setFetchAgain}></AddBranch> : ''}
-            {editOpen ? <EditBranch isOpen={editOpen} onClose={() => { setEditOpen(false) }} id={editBranchId} setBranches={setBranches}></EditBranch> : ''}
+            {isViewOpen ? <ViewManager isOpen={isViewOpen} onClose={() => { setIsViewopen(false) }} data={viewDetails}></ViewManager> : ''}
         </>
     )
 }

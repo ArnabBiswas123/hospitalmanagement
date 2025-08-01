@@ -88,7 +88,7 @@ export default function EditBranch(props: Proptype) {
                         ))
                 }
 
-                actions.resetForm();
+                // actions.resetForm();
                 toaster.create({
                     title: "Hospital updated successfully.",
                     type: "success",

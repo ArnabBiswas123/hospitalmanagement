@@ -7,36 +7,29 @@ import {
 } from '@chakra-ui/react'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
-import { useLocation } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { GiHamburgerMenu } from "react-icons/gi";
 import { FaHospital } from "react-icons/fa";
 import { Tooltip } from '../../components/ui/tooltip';
+import { GrUserManager } from "react-icons/gr";
+import { FiLogOut } from "react-icons/fi";
 import BranchTable from '../../components/superadmin/BranchTable';
-type AssociatedHospital = {
-    userid: string;
-    name: string;
-    email: string;
-    createdAt: string;
-    updatedAt: string;
-}
+import ManagerTable from '../../components/superadmin/ManagerTable';
+import AddManager from '../../components/superadmin/AddManager';
+import EditManager from '../../components/superadmin/EditManager';
+import { FaUser } from "react-icons/fa";
+import MyProfile from '../../components/superadmin/MyProfile';
 
 type Profile = {
     userid: string;
     name: string;
-    email: string;
-    phone: string;
-    associatedHospital: AssociatedHospital;
-    createdAt: string;
-    updatedAt: string;
 }
-
-
-
 export default function Dashboard() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const location = useLocation();
     const navigate = useNavigate()
     const { pathname } = location;
+    const { managerid } = useParams();
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
     const fetchprofile = async () => {
         try {
@@ -70,6 +63,14 @@ export default function Dashboard() {
             console.error("Error:", error);
         }
     }
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        navigate("/");
+    };
+
+
+
     useEffect(() => {
         fetchprofile()
     }, [])
@@ -107,9 +108,10 @@ export default function Dashboard() {
                                     fontSize={"md"}
                                     fontWeight={"medium"}
                                     fontFamily={"Inter, sans-serif"}
+                                    title={profile?.name}
                                 >
                                     {" "}
-                                    {`Dr. ${profile.name.length > 6
+                                    {`${profile.name.length > 6
                                         ? `${profile.name.substring(0, 6)}...`
                                         : profile.name
                                         }`}
@@ -209,6 +211,115 @@ export default function Dashboard() {
                                                 Branch
                                             </Text>
                                         </Box>
+                                        <Box
+                                            display={"flex"}
+                                            alignItems={"center"}
+                                            px={4}
+                                            py={1}
+                                            color={
+                                                pathname === "/superadmin/managers" || (pathname.includes('/superadmin/addmanager')) || (pathname.includes('/superadmin/editmanager') && managerid)
+                                                    ? "white"
+                                                    : "black"
+                                            }
+                                            borderRadius={"lg"}
+                                            backgroundColor={
+                                                pathname === "/superadmin/managers" || (pathname.includes('/superadmin/addmanager')) || (pathname.includes('/superadmin/editmanager') && managerid) ? "#3B82F6"
+                                                    : ""
+                                            }
+                                            _hover={{ bg: "#d6e4fc", cursor: "pointer" }}
+                                            onClick={() => {
+                                                navigate("/superadmin/managers");
+                                            }}
+                                            width={"100%"}
+                                        >
+                                            <IconButton
+                                                color={
+                                                    pathname === "/superadmin/managers" || (pathname.includes('/superadmin/addmanager')) || (pathname.includes('/superadmin/editmanager') && managerid)
+                                                        ? "white"
+                                                        : "black"
+                                                }
+                                                bgColor={"transparent"}
+                                                _hover={{ bg: "transparent" }}
+                                                _focus={{ boxShadow: "none" }}
+                                                _active={{ bg: "transparent" }}
+                                            >
+                                                <GrUserManager size="24px" />
+                                            </IconButton>
+
+                                            <Text
+                                                fontSize={["lg", "lg", "lg", "lg", "lg"]}
+                                                fontWeight={"medium"}
+                                                fontFamily={"Inter, sans-serif"}
+                                            >
+                                                {" "}
+                                                Managers
+                                            </Text>
+                                        </Box>
+                                        <Box
+                                            display={"flex"}
+                                            alignItems={"center"}
+                                            px={4}
+                                            py={1}
+                                            color={
+                                                pathname === "/superadmin/myprofile"
+                                                    ? "white"
+                                                    : "black"
+                                            }
+                                            borderRadius={"lg"}
+                                            backgroundColor={
+                                                pathname === "/superadmin/myprofile" ? "#3B82F6"
+                                                    : ""
+                                            }
+                                            _hover={{ bg: "#d6e4fc", cursor: "pointer" }}
+                                            onClick={() => {
+                                                navigate("/superadmin/myprofile");
+                                            }}
+                                            width={"100%"}
+                                        >
+                                            <IconButton
+                                                color={
+                                                    pathname === "/superadmin/myprofile"
+                                                        ? "white"
+                                                        : "black"
+                                                }
+                                                bgColor={"transparent"}
+                                                _hover={{ bg: "transparent" }}
+                                                _focus={{ boxShadow: "none" }}
+                                                _active={{ bg: "transparent" }}
+                                            >
+                                                <FaUser size="24px" />
+                                            </IconButton>
+
+                                            <Text
+                                                fontSize={["lg", "lg", "lg", "lg", "lg"]}
+                                                fontWeight={"medium"}
+                                                fontFamily={"Inter, sans-serif"}
+                                            >
+                                                {" "}
+                                                Myprofile
+                                            </Text>
+                                        </Box>
+                                    </Box>
+                                    <Box
+                                        marginTop={"auto"}
+                                        py={4}
+                                        display={"flex"}
+                                        px={10}
+                                        borderTop={"1px solid"}
+                                        borderColor={"gray.400"}
+                                    >
+                                        <Box
+                                            display={"flex"}
+                                            gap={4}
+                                            cursor={"pointer"}
+                                            alignItems={'center'}
+                                            onClick={handleLogout}
+                                        >
+                                            <FiLogOut size={'24px'} color="red"></FiLogOut>
+                                            <Text fontFamily={"Inter, sans-serif"} color={"red"}>
+                                                Logout
+                                            </Text>
+                                        </Box>
                                     </Box>
                                 </Box>
                             </>}
@@ -252,7 +363,86 @@ export default function Dashboard() {
                                                     </IconButton>
                                                 </Box>
                                             </Tooltip>
+                                            <Tooltip content="Managers" positioning={{ placement: "right-end" }} showArrow>
+                                                <Box
+                                                    display={"flex"}
+                                                    alignItems={"center"}
+                                                    gap={4}
+                                                    px={2}
+                                                    py={1}
+                                                    width={"100%"}
+                                                    backgroundColor={
+                                                        pathname === "/superadmin/managers" || (pathname.includes('/superadmin/editmanager') && managerid) || (pathname.includes('/superadmin/addmanager')) ? "#3B82F6" : ""
+                                                    }
+                                                    _hover={{ bg: "#d6e4fc", cursor: "pointer" }}
+
+                                                    onClick={() => {
+                                                        navigate("/superadmin/managers");
+                                                    }}
+                                                >
+                                                    <IconButton
+                                                        color={
+                                                            pathname === "/superadmin/managers" || (pathname.includes('/superadmin/addmanager')) || (pathname.includes('/superadmin/editmanager') && managerid) ? "white" : "black"
+                                                        }
+                                                        bgColor={"transparent"}
+                                                        _hover={{ bg: "transparent" }}
+                                                        _focus={{ boxShadow: "none" }}
+                                                        _active={{ bg: "transparent" }}
+                                                    >
+                                                        <GrUserManager size="24px" />
+                                                    </IconButton>
+                                                </Box>
+                                            </Tooltip>
+                                            <Tooltip content="Myprofile" positioning={{ placement: "right-end" }} showArrow>
+                                                <Box
+                                                    display={"flex"}
+                                                    alignItems={"center"}
+                                                    gap={4}
+                                                    px={2}
+                                                    py={1}
+                                                    width={"100%"}
+                                                    backgroundColor={
+                                                        pathname === "/superadmin/myprofile" ? "#3B82F6" : ""
+                                                    }
+                                                    _hover={{ bg: "#d6e4fc", cursor: "pointer" }}
+
+                                                    onClick={() => {
+                                                        navigate("/superadmin/myprofile");
+                                                    }}
+                                                >
+                                                    <IconButton
+                                                        color={
+                                                            pathname === "/superadmin/myprofile" ? "white" : "black"
+                                                        }
+                                                        bgColor={"transparent"}
+                                                        _hover={{ bg: "transparent" }}
+                                                        _focus={{ boxShadow: "none" }}
+                                                        _active={{ bg: "transparent" }}
+                                                    >
+                                                        <FaUser size="24px" />
+                                                    </IconButton>
+                                                </Box>
+                                            </Tooltip>
                                         </Box>
+                                        <Tooltip content="Logout" positioning={{ placement: "right-end" }} showArrow>
+                                            <Box
+                                                marginTop={"auto"}
+                                                py={4}
+                                                display={"flex"}
+                                                px={4}
+                                                borderTop={"1px solid"}
+                                                borderColor={"gray.400"}
+                                            >
+                                                <Box
+                                                    display={"flex"}
+                                                    gap={4}
+                                                    cursor={"pointer"}
+                                                    onClick={handleLogout}
+                                                >
+                                                    <FiLogOut size={'24px'} color="red"></FiLogOut>
+                                                </Box>
+                                            </Box>
+                                        </Tooltip>
                                     </Box>
                                 </>
                             )}
@@ -277,23 +467,28 @@ export default function Dashboard() {
                             >
                                 HOSPITAL SUPERADMIN DASHBOARD
                             </Text>
-
-                            {/* <Text
-                                fontFamily={"Inter, sans-serif"}
-                                fontSize={"lg"}
-                                mx={"auto"}
-                                marginBottom={2}
-                            // fontWeight={"bold"}
-                            // display={["flex", "flex", "none", "none"]}
-                            >
-                                {`${profile.associatedHospital.name.length > 50
-                                    ? `${profile.associatedHospital.name.substring(0, 50)}...`
-                                    : profile.associatedHospital.name
-                                    } SuperAdmin`}
-                            </Text> */}
-
                             {pathname === "/superadmin" ? (
                                 <BranchTable></BranchTable>
+                            ) : (
+                                ""
+                            )}
+                            {pathname === "/superadmin/managers" ? (
+                                <ManagerTable></ManagerTable>
+                            ) : (
+                                ""
+                            )}
+                            {pathname === "/superadmin/addmanager" ? (
+                                <AddManager></AddManager>
+                            ) : (
+                                ""
+                            )}
+                            {pathname.includes("/superadmin/editmanager") && managerid ? (
+                                <EditManager managerid={managerid}></EditManager>
+                            ) : (
+                                ""
+                            )}
+                            {pathname === "/superadmin/myprofile" ? (
+                                <MyProfile></MyProfile>
                             ) : (
                                 ""
                             )}

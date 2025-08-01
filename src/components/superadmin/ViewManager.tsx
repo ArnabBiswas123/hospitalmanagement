@@ -1,22 +1,27 @@
 
 import { Box, CloseButton, Center, Text, Dialog, Portal } from "@chakra-ui/react"
-import type { branch } from "./BranchTable";
+import type { manager } from "./ManagerTable";
 type Proptype = {
     isOpen: boolean,
     onClose: () => void,
-    data: branch | null
+    data: manager | null
 }
 
-export default function ViewBranch(props: Proptype) {
+export default function ViewManager(props: Proptype) {
     const userName = props.data?.createdBy?.name ?? "";
     const updateduserName = props.data?.updatedBy?.name ?? "";
+    const branchName = props.data?.associatedHospitalBranch?.name ?? ""
     const displayName =
         userName.length > 45
             ? `${userName.slice(0, 45)}…`
             : userName;
+    const displayBranch = branchName.length > 30 ? `${branchName.slice(0, 30)}…`
+        : branchName;
     const displayUpdated = updateduserName.length > 45
         ? `${updateduserName.slice(0, 45)}…`
         : updateduserName;
+
+
 
     return (
         <Dialog.Root size={'sm'}
@@ -28,7 +33,7 @@ export default function ViewBranch(props: Proptype) {
                 <Dialog.Positioner>
                     <Dialog.Content>
                         <Center my={4}>
-                            <Dialog.Title fontSize={'lg'} fontWeight={"bold"}>Details of the Hospital Branch</Dialog.Title>
+                            <Dialog.Title fontSize={'lg'} fontWeight={"bold"}>Details of the Hospital Manager</Dialog.Title>
                         </Center>
                         <Dialog.Body>
                             {props.data ? (
@@ -44,6 +49,9 @@ export default function ViewBranch(props: Proptype) {
                                     </Box>
                                     <Box fontFamily="Inter, sans-serif" display={'flex'} gap={2}>
                                         <strong>Phone:</strong> <Text title={props.data?.phone}>{props.data?.phone}</Text>
+                                    </Box>
+                                    <Box fontFamily="Inter, sans-serif" display={'flex'} gap={2}>
+                                        <strong>Associated Hospital:</strong><Text title={props.data?.associatedHospitalBranch.name}>{`${displayBranch} , ${props.data?.associatedHospitalBranch.userid}`}</Text>
                                     </Box>
                                     {props.data?.isdefault ? <Box fontFamily="Inter, sans-serif" display={'flex'} gap={2}>
                                         <strong>CreatedBy:</strong> <Text>Super Super Admin</Text>

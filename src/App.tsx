@@ -9,6 +9,10 @@ function App() {
       <Routes>
         <Route path="/" element={<Login></Login>}></Route>
          <Route path="/superadmin" element={<Dashboard></Dashboard>}></Route>
+         <Route path="/superadmin/managers" element={<Dashboard></Dashboard>}></Route>
+         <Route path="/superadmin/addmanager" element={<Dashboard></Dashboard>}></Route>
+         <Route path="/superadmin/editmanager/:managerid" element={<Dashboard></Dashboard>}></Route>
+         <Route path="/superadmin/myprofile" element={<Dashboard></Dashboard>}></Route>
       </Routes>
     </>
   )
